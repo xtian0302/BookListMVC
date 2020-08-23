@@ -7,20 +7,36 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookListMVC.Controllers
-{
-    [Route("api/Book")]
-    [ApiController]
+{ 
     public class BooksController : Controller
     {
-        public IActionResult Index()
-        {
-            return View();
-        }
         private readonly ApplicationDbContext _db;
         public BooksController(ApplicationDbContext db)
         {
             _db = db;
         }
+        [BindProperty]
+        public Book Book { get; set; }
+        public IActionResult Index()
+        {
+            return View();
+        }
+        public IActionResult Upsert(int? id)
+        {
+            Book = new Book();
+            if (id == null)
+            {
+                return View(Book);
+            }
+            Book = _db.Books.FirstOrDefault(u => u.Id == id);
+            if(Book == null)
+            {
+                return NotFound();
+            }
+            return View(Book);
+        }
+
+        #region API Calls
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -39,5 +55,6 @@ namespace BookListMVC.Controllers
             await _db.SaveChangesAsync();
             return Json(new { success = true, message = "Delete Succesful" });
         }
+        #endregion
     }
 }
